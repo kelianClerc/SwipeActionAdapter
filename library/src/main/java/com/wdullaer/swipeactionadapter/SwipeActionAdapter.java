@@ -35,10 +35,11 @@ public class SwipeActionAdapter extends DecoratorAdapter implements
 {
     private ListView mListView;
     private SwipeActionTouchListener mTouchListener;
-    protected SwipeActionListener mSwipeActionListener;
+    private SwipeActionListener mSwipeActionListener;
     private boolean mFadeOut = false;
     private boolean mFixedBackgrounds = false;
     private boolean mDimBackgrounds = false;
+    private boolean mStopToFarSwipe = false;
     private float mFarSwipeFraction = 0.5f;
     private float mNormalSwipeFraction = 0.25f;
 
@@ -203,6 +204,17 @@ public class SwipeActionAdapter extends DecoratorAdapter implements
     }
 
     /**
+     * Set whether the swipe translation must stop to far threshold
+     * The default value for this property is true
+     *
+     * @param mStopToFarSwipe true for stoping swipe to far threshold, false for screen width
+     * swipe
+     */
+    public void setShouldStopToFarSwipe(boolean mStopToFarSwipe) {
+        this.mStopToFarSwipe = mStopToFarSwipe;
+    }
+
+    /**
      * We need the ListView to be able to modify it's OnTouchListener
      *
      * @param listView the ListView to which the adapter will be attached
@@ -219,6 +231,7 @@ public class SwipeActionAdapter extends DecoratorAdapter implements
         mTouchListener.setFixedBackgrounds(mFixedBackgrounds);
         mTouchListener.setNormalSwipeFraction(mNormalSwipeFraction);
         mTouchListener.setFarSwipeFraction(mFarSwipeFraction);
+        mTouchListener.setShouldStopToFarSwipe(mStopToFarSwipe);
         return this;
     }
 

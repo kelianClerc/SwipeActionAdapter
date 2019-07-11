@@ -84,6 +84,7 @@ public class SwipeActionTouchListener implements View.OnTouchListener {
     private boolean mFadeOut = false;
     private boolean mFixedBackgrounds = false;
     private boolean mDimBackgrounds = false;
+    private boolean mStopToFarSwipe = false;
     private float mNormalSwipeFraction = 0.25f;
     private float mFarSwipeFraction = 0.5f;
 
@@ -255,7 +256,18 @@ public class SwipeActionTouchListener implements View.OnTouchListener {
     protected void setNormalSwipeFraction(float normalSwipeFraction) {
         mNormalSwipeFraction = normalSwipeFraction;
     }
-    
+
+    /**
+     * Set whether the swipe translation must stop to far threshold
+     * The default value for this property is true
+     *
+     * @param mStopToFarSwipe true for stoping swipe to far threshold, false for screen width
+     * swipe
+     */
+    protected void setShouldStopToFarSwipe(boolean mStopToFarSwipe) {
+        this.mStopToFarSwipe = mStopToFarSwipe;
+    }
+
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
         if (mViewWidth < 2) {
@@ -436,7 +448,7 @@ public class SwipeActionTouchListener implements View.OnTouchListener {
                     else mDirection = (deltaX > 0 ? SwipeDirection.DIRECTION_FAR_RIGHT : SwipeDirection.DIRECTION_FAR_LEFT);
                     if(mCallbacks.hasActions(mDownPosition, mDirection)) {
                         mDownViewGroup.showBackground(mDirection, mDimBackgrounds && (Math.abs(deltaX) < mViewWidth*mNormalSwipeFraction));
-                        mDownView.setTranslationX(deltaX - mSwipingSlop);
+                        mDownView.setTranslationX(computeViewTranslation(deltaX));
                         if(mFadeOut) mDownView.setAlpha(Math.max(0f, Math.min(1f,
                                     1f - 2f * Math.abs(deltaX) / mViewWidth)));
                         mListView.invalidate();
@@ -449,6 +461,17 @@ public class SwipeActionTouchListener implements View.OnTouchListener {
         return false;
     }
 
+    private float computeViewTranslation(float deltaX) {
+        if (mStopToFarSwipe) {
+            if (mDirection.isLeft()) {
+                return Math.max(deltaX - mSwipingSlop, -1 * mViewWidth * mFarSwipeFraction);
+            } else {
+                return Math.min(deltaX - mSwipingSlop, mViewWidth * mFarSwipeFraction);
+            }
+        } else {
+            return deltaX - mSwipingSlop;
+        }
+    }
     class PendingDismissData implements Comparable<PendingDismissData> {
         public int position;
         public SwipeDirection direction;
@@ -523,7 +546,7 @@ public class SwipeActionTouchListener implements View.OnTouchListener {
                     // animation with a stale position
                     mDownPosition = ListView.INVALID_POSITION;
 
-                    
+
                     for (PendingDismissData pendingDismiss : mPendingDismisses) {
                         // Reset view presentation
                         pendingDismiss.view.setAlpha(1f);

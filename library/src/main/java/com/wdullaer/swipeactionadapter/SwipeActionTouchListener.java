@@ -324,15 +324,15 @@ public class SwipeActionTouchListener implements View.OnTouchListener {
                 if (mDownView != null && mSwiping) {
                     // cancel
                     mDownView.animate()
-                            .translationX(0)
-                            .alpha(1)
-                            .setDuration(mAnimationTime)
-                            .setListener(new AnimatorListenerAdapter() {
-                                @Override
-                                public void onAnimationEnd(Animator animation) {
-                                    mDownViewGroup.showBackground(SwipeDirection.DIRECTION_NEUTRAL, false);
-                                }
-                            });
+                        .translationX(0)
+                        .alpha(1)
+                        .setDuration(mAnimationTime)
+                        .setListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                mDownViewGroup.showBackground(SwipeDirection.DIRECTION_NEUTRAL, false);
+                            }
+                        });
                 }
                 mVelocityTracker.recycle();
                 mVelocityTracker = null;
@@ -376,22 +376,20 @@ public class SwipeActionTouchListener implements View.OnTouchListener {
                     final int downPosition = mDownPosition;
                     final SwipeDirection direction = mDirection;
                     ++mDismissAnimationRefCount;
-                    mDownView.animate()
-                            .translationX(dismissRight ? mViewWidth : -mViewWidth)
-                            .alpha(mFadeOut ? 0 : 1)
-                            .setDuration(mAnimationTime)
-                            .setListener(new AnimatorListenerAdapter() {
-                                @Override
-                                public void onAnimationEnd(Animator animation) {
-                                    boolean performDismiss = mCallbacks.onPreAction(
-                                            mListView,
-                                            downPosition,
-                                            direction
-                                    );
-                                    if(performDismiss) performDismiss(downView,downPosition,direction);
-                                    else slideBack(downView, downPosition, direction);
-                                }
-                            });
+                    if (mStopToFarSwipe) {
+                        slideBackView(downView, downPosition, direction);
+                    } else {
+                        mDownView.animate()
+                                 .translationX(dismissRight ? mViewWidth : -mViewWidth)
+                                 .alpha(mFadeOut ? 0 : 1)
+                                 .setDuration(mAnimationTime)
+                                 .setListener(new AnimatorListenerAdapter() {
+                                     @Override
+                                     public void onAnimationEnd(Animator animation) {
+                                         slideBackView(downView, downPosition, direction);
+                                     }
+                                 });
+                    }
                 } else {
                     // cancel
                     mDownView.animate()
@@ -472,6 +470,17 @@ public class SwipeActionTouchListener implements View.OnTouchListener {
             return deltaX - mSwipingSlop;
         }
     }
+
+    private void slideBackView(View downView, int downPosition, SwipeDirection direction) {
+        boolean performDismiss = mCallbacks.onPreAction(
+            mListView,
+            downPosition,
+            direction
+        );
+        if (performDismiss) performDismiss(downView, downPosition, direction);
+        else slideBack(downView, downPosition, direction);
+    }
+
     class PendingDismissData implements Comparable<PendingDismissData> {
         public int position;
         public SwipeDirection direction;
